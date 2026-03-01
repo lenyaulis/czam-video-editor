@@ -512,6 +512,23 @@ function AudioTrimmer({ audioFile, videoDuration, onTrimChange, isOpen, onClose 
               onTouchEnd={handleTouchEnd}
               onTouchCancel={handleTouchEnd}
             />
+            
+            <div className="segment-position">
+              <label>
+                Позиция отрезка:
+                <input
+                  type="range"
+                  min="0"
+                  max={Math.max(0, duration - segmentDuration)}
+                  step="0.1"
+                  value={segmentStart}
+                  onChange={(e) => setSegmentStart(parseFloat(e.target.value))}
+                  className="position-slider"
+                />
+                <span>{segmentStart.toFixed(1)} сек</span>
+              </label>
+            </div>
+            
             <div className="waveform-info">
               <span>Общая длительность трека: {duration.toFixed(1)} сек</span>
               <span>Выбранный отрезок: {segmentStart.toFixed(1)} - {segmentEnd.toFixed(1)} сек</span>
@@ -549,22 +566,6 @@ function AudioTrimmer({ audioFile, videoDuration, onTrimChange, isOpen, onClose 
                 Текущее время: {currentTime.toFixed(1)}с |
                 Отрезок: {segmentStart.toFixed(1)}-{segmentEnd.toFixed(1)}с
               </small>
-            </div>
-            
-            <div className="segment-position">
-              <label>
-                Позиция отрезка:
-                <input
-                  type="range"
-                  min="0"
-                  max={Math.max(0, duration - segmentDuration)}
-                  step="0.1"
-                  value={segmentStart}
-                  onChange={(e) => setSegmentStart(parseFloat(e.target.value))}
-                  className="position-slider"
-                />
-                <span>{segmentStart.toFixed(1)} сек</span>
-              </label>
             </div>
           </div>
 

@@ -294,25 +294,84 @@ function App() {
   const handleDownloadOne = (v) => {
     const blob = results[v.name];
     const url = URL.createObjectURL(blob);
+    const fileName = v.name.replace(/\.mp4$/i, "_song.mp4");
+    
+    // Создаем невидимую ссылку
     const a = document.createElement("a");
+    a.style.display = 'none';
     a.href = url;
-    a.download = v.name.replace(/\.mp4$/i, "_song.mp4");
+    a.download = fileName;
     
-    // Для мобильных устройств принудительно скачиваем
-    a.setAttribute('download', v.name.replace(/\.mp4$/i, "_song.mp4"));
-    
+    // Добавляем в DOM, кликаем, удаляем
     document.body.appendChild(a);
-    a.click();
+    
+    // Для iOS/Safari используем другой подход
+    if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
+      // Открываем в новой вкладке с инструкцией
+      const newWindow = window.open(url, '_blank');
+      if (newWindow) {
+        setTimeout(() => {
+          alert('Для скачивания видео:\n1. Нажмите и удерживайте видео\n2. Выберите "Сохранить видео"');
+        }, 500);
+      }
+    } else {
+      // Для Android и десктопа - обычное скачивание
+      a.click();
+    }
+    
     document.body.removeChild(a);
     
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    // Очищаем URL через 10 секунд
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
   };
 
   const handlePreviewOne = (v) => {
     const blob = results[v.name];
     const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
-    setTimeout(() => URL.revokeObjectURL(url), 60000); // Даем больше времени для просмотра
+    
+    // Открываем в новой вкладке
+    const newWindow = window.open('', '_blank');
+    if (newWindow) {
+      newWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${v.name}</title>
+          <style>
+            body {
+              margin: 0;
+              padding: 0;
+              background: #000;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              min-height: 100vh;
+            }
+            video {
+              max-width: 100%;
+              max-height: 100vh;
+              width: auto;
+              height: auto;
+            }
+          </style>
+        </head>
+        <body>
+          <video controls autoplay>
+            <source src="${url}" type="video/mp4">
+            Ваш браузер не поддерживает видео.
+          </video>
+        </body>
+        </html>
+      `);
+      newWindow.document.close();
+    } else {
+      alert('Не удалось открыть окно просмотра. Проверьте, не блокирует ли браузер всплывающие окна.');
+    }
+    
+    // Очищаем URL через минуту
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
   };
 
   const handleNewConversion = () => {

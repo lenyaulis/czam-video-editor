@@ -293,34 +293,55 @@ function App() {
 
   const handleDownloadOne = (v) => {
     const blob = results[v.name];
-    const url = URL.createObjectURL(blob);
     const fileName = v.name.replace(/\.mp4$/i, "_song.mp4");
     
-    // Проверяем, мобильное ли устройство
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    
-    if (isMobile) {
-      // На мобильных просто открываем видео в новой вкладке
-      // Пользователь сможет скачать его через меню браузера
-      window.open(url, '_blank');
-      
-      // Показываем подсказку через 1 секунду
-      setTimeout(() => {
-        alert('💡 Чтобы скачать видео:\n\n• На iPhone/iPad: нажмите и удерживайте видео, затем "Сохранить видео"\n• На Android: нажмите ⋮ (меню) → Скачать');
-      }, 1000);
+    // Проверяем поддержку showSaveFilePicker (современный API)
+    if ('showSaveFilePicker' in window) {
+      // Используем File System Access API (работает в Chrome/Edge на Android)
+      handleModernDownload(blob, fileName);
     } else {
-      // На десктопе - обычное скачивание
-      const a = document.createElement("a");
-      a.style.display = 'none';
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      // Fallback для других браузеров
+      handleLegacyDownload(blob, fileName);
     }
+  };
+
+  const handleModernDownload = async (blob, fileName) => {
+    try {
+      const opts = {
+        suggestedName: fileName,
+        types: [{
+          description: 'Video files',
+          accept: {'video/mp4': ['.mp4']},
+        }],
+      };
+      
+      const handle = await window.showSaveFilePicker(opts);
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      
+      alert('✅ Видео успешно сохранено!');
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error('Save error:', err);
+        // Если не получилось, используем старый метод
+        handleLegacyDownload(blob, fileName);
+      }
+    }
+  };
+
+  const handleLegacyDownload = (blob, fileName) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.style.display = 'none';
+    a.href = url;
+    a.download = fileName;
     
-    // Очищаем URL через 30 секунд
-    setTimeout(() => URL.revokeObjectURL(url), 30000);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
   };
 
   const handlePreviewOne = (v) => {

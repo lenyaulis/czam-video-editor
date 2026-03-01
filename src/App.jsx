@@ -310,11 +310,44 @@ function App() {
     }
   };
 
-  const handleIOSDownload = (blob, fileName, originalName) => {
-    // Создаем URL для blob
+  const handleIOSDownload = async (blob, fileName, originalName) => {
+    try {
+      // Конвертируем blob в data URL для iOS
+      const reader = new FileReader();
+      
+      reader.onloadend = () => {
+        const dataUrl = reader.result;
+        
+        // Создаем ссылку с data URL
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = fileName;
+        a.style.display = 'none';
+        
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      };
+      
+      reader.onerror = () => {
+        console.error('FileReader error');
+        // Fallback - открываем страницу с инструкцией
+        showIOSInstructions(blob, fileName);
+      };
+      
+      // Читаем blob как data URL
+      reader.readAsDataURL(blob);
+      
+    } catch (error) {
+      console.error('iOS download error:', error);
+      // Fallback - открываем страницу с инструкцией
+      showIOSInstructions(blob, fileName);
+    }
+  };
+
+  const showIOSInstructions = (blob, fileName) => {
     const url = URL.createObjectURL(blob);
     
-    // Для iOS сразу открываем страницу с инструкцией
     const videoWindow = window.open('', '_blank');
     if (videoWindow) {
       videoWindow.document.write(`
@@ -400,11 +433,8 @@ function App() {
         </html>
       `);
       videoWindow.document.close();
-    } else {
-      alert('Не удалось открыть окно. Проверьте настройки блокировки всплывающих окон.');
     }
     
-    // Очищаем URL через минуту
     setTimeout(() => URL.revokeObjectURL(url), 60000);
   };
 

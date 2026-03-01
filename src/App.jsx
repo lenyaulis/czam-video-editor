@@ -296,33 +296,31 @@ function App() {
     const url = URL.createObjectURL(blob);
     const fileName = v.name.replace(/\.mp4$/i, "_song.mp4");
     
-    // Создаем невидимую ссылку
-    const a = document.createElement("a");
-    a.style.display = 'none';
-    a.href = url;
-    a.download = fileName;
+    // Проверяем, мобильное ли устройство
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
-    // Добавляем в DOM, кликаем, удаляем
-    document.body.appendChild(a);
-    
-    // Для iOS/Safari используем другой подход
-    if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
-      // Открываем в новой вкладке с инструкцией
-      const newWindow = window.open(url, '_blank');
-      if (newWindow) {
-        setTimeout(() => {
-          alert('Для скачивания видео:\n1. Нажмите и удерживайте видео\n2. Выберите "Сохранить видео"');
-        }, 500);
-      }
+    if (isMobile) {
+      // На мобильных просто открываем видео в новой вкладке
+      // Пользователь сможет скачать его через меню браузера
+      window.open(url, '_blank');
+      
+      // Показываем подсказку через 1 секунду
+      setTimeout(() => {
+        alert('💡 Чтобы скачать видео:\n\n• На iPhone/iPad: нажмите и удерживайте видео, затем "Сохранить видео"\n• На Android: нажмите ⋮ (меню) → Скачать');
+      }, 1000);
     } else {
-      // Для Android и десктопа - обычное скачивание
+      // На десктопе - обычное скачивание
+      const a = document.createElement("a");
+      a.style.display = 'none';
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
     }
     
-    document.body.removeChild(a);
-    
-    // Очищаем URL через 10 секунд
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    // Очищаем URL через 30 секунд
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
   };
 
   const handlePreviewOne = (v) => {

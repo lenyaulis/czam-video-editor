@@ -295,14 +295,125 @@ function App() {
     const blob = results[v.name];
     const fileName = v.name.replace(/\.mp4$/i, "_song.mp4");
     
-    // Проверяем поддержку showSaveFilePicker (современный API)
-    if ('showSaveFilePicker' in window) {
-      // Используем File System Access API (работает в Chrome/Edge на Android)
+    // Определяем iOS
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    
+    if (isIOS) {
+      // Для iOS используем специальный метод
+      handleIOSDownload(blob, fileName, v.name);
+    } else if ('showSaveFilePicker' in window) {
+      // Для Android Chrome - современный API
       handleModernDownload(blob, fileName);
     } else {
-      // Fallback для других браузеров
+      // Fallback для остальных
       handleLegacyDownload(blob, fileName);
     }
+  };
+
+  const handleIOSDownload = (blob, fileName, originalName) => {
+    // Создаем URL для blob
+    const url = URL.createObjectURL(blob);
+    
+    // Создаем временную ссылку
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.style.display = 'none';
+    
+    // Добавляем в DOM
+    document.body.appendChild(a);
+    
+    // Пробуем кликнуть
+    a.click();
+    
+    // Если клик не сработал (часто на iOS), показываем инструкцию
+    setTimeout(() => {
+      // Открываем видео в новой вкладке
+      const videoWindow = window.open('', '_blank');
+      if (videoWindow) {
+        videoWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${fileName}</title>
+            <style>
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              body {
+                background: #000;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                color: #fff;
+                padding: 1rem;
+              }
+              .container {
+                width: 100%;
+                max-width: 600px;
+                text-align: center;
+              }
+              .instructions {
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+                backdrop-filter: blur(10px);
+              }
+              .instructions h2 {
+                font-size: 1.2rem;
+                margin-bottom: 1rem;
+                color: #a78bfa;
+              }
+              .instructions ol {
+                text-align: left;
+                padding-left: 1.5rem;
+                line-height: 1.8;
+              }
+              .instructions li {
+                margin-bottom: 0.5rem;
+              }
+              video {
+                width: 100%;
+                max-width: 100%;
+                border-radius: 8px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+              }
+              .filename {
+                margin-top: 1rem;
+                font-size: 0.9rem;
+                color: #a1a1aa;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="instructions">
+                <h2>📱 Как сохранить видео на iPhone</h2>
+                <ol>
+                  <li>Нажмите и удерживайте палец на видео ниже</li>
+                  <li>В появившемся меню выберите <strong>"Сохранить видео"</strong></li>
+                  <li>Видео сохранится в приложение <strong>"Фото"</strong></li>
+                </ol>
+              </div>
+              <video controls playsinline>
+                <source src="${url}" type="video/mp4">
+              </video>
+              <div class="filename">${fileName}</div>
+            </div>
+          </body>
+          </html>
+        `);
+        videoWindow.document.close();
+      }
+    }, 100);
+    
+    // Очищаем
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
   };
 
   const handleModernDownload = async (blob, fileName) => {
@@ -324,7 +435,6 @@ function App() {
     } catch (err) {
       if (err.name !== 'AbortError') {
         console.error('Save error:', err);
-        // Если не получилось, используем старый метод
         handleLegacyDownload(blob, fileName);
       }
     }

@@ -292,12 +292,27 @@ function App() {
   };
 
   const handleDownloadOne = (v) => {
-    const url = URL.createObjectURL(results[v.name]);
+    const blob = results[v.name];
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = v.name.replace(/\.mp4$/i, "_song.mp4");
+    
+    // Для мобильных устройств принудительно скачиваем
+    a.setAttribute('download', v.name.replace(/\.mp4$/i, "_song.mp4"));
+    
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
+    
     setTimeout(() => URL.revokeObjectURL(url), 5000);
+  };
+
+  const handlePreviewOne = (v) => {
+    const blob = results[v.name];
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 60000); // Даем больше времени для просмотра
   };
 
   const handleNewConversion = () => {
@@ -483,13 +498,22 @@ function App() {
                   )}
                 </div>
                 {done && (
-                  <button
-                    type="button"
-                    className="btn-download"
-                    onClick={() => handleDownloadOne(v)}
-                  >
-                    ↓ Скачать
-                  </button>
+                  <div className="video-actions">
+                    <button
+                      type="button"
+                      className="btn-preview"
+                      onClick={() => handlePreviewOne(v)}
+                    >
+                      👁 Просмотр
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-download"
+                      onClick={() => handleDownloadOne(v)}
+                    >
+                      ↓ Скачать
+                    </button>
+                  </div>
                 )}
               </div>
             );

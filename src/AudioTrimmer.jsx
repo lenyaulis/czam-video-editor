@@ -174,7 +174,7 @@ function AudioTrimmer({ audioFile, videoDuration, onTrimChange, isOpen, onClose 
     }
   };
 
-  // Обработка начала перетаскивания
+  // Обработка начала перетаскивания (мышь)
   const handleMouseDown = (e) => {
     const canvas = canvasRef.current;
     if (!canvas || !duration) return;
@@ -184,6 +184,25 @@ function AudioTrimmer({ audioFile, videoDuration, onTrimChange, isOpen, onClose 
     const clickTime = (x / canvas.width) * duration;
     
     // Проверяем, попал ли клик в область выделенного отрезка
+    if (clickTime >= segmentStart && clickTime <= segmentEnd) {
+      setIsDragging(true);
+      setDragOffset(clickTime - segmentStart);
+      canvas.style.cursor = 'grabbing';
+    }
+  };
+
+  // Обработка начала перетаскивания (тач)
+  const handleTouchStart = (e) => {
+    const canvas = canvasRef.current;
+    if (!canvas || !duration) return;
+
+    e.preventDefault(); // Предотвращаем скролл
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    const clickTime = (x / canvas.width) * duration;
+    
+    // Проверяем, попал ли тач в область выделенного отрезка
     if (clickTime >= segmentStart && clickTime <= segmentEnd) {
       setIsDragging(true);
       setDragOffset(clickTime - segmentStart);
@@ -219,7 +238,39 @@ function AudioTrimmer({ audioFile, videoDuration, onTrimChange, isOpen, onClose 
     }
   };
 
+  // Обработка перемещения (тач)
+  const handleTouchMove = (e) => {
+    const canvas = canvasRef.current;
+    if (!canvas || !duration || !isDragging) return;
+
+    e.preventDefault(); // Предотвращаем скролл
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    const mouseTime = (x / canvas.width) * duration;
+    
+    // Перемещаем отрезок
+    const newStart = mouseTime - dragOffset;
+    const maxStart = duration - segmentDuration;
+    const clampedStart = Math.max(0, Math.min(maxStart, newStart));
+    
+    // Обновляем только если позиция действительно изменилась
+    if (Math.abs(clampedStart - segmentStart) > 0.1) {
+      setSegmentStart(clampedStart);
+    }
+  };
+
   const handleMouseUp = () => {
+    setIsDragging(false);
+    setDragOffset(0);
+    const canvas = canvasRef.current;
+    if (canvas) {
+      canvas.style.cursor = 'default';
+    }
+  };
+
+  // Обработка окончания перетаскивания (тач)
+  const handleTouchEnd = () => {
     setIsDragging(false);
     setDragOffset(0);
     const canvas = canvasRef.current;
@@ -456,6 +507,10 @@ function AudioTrimmer({ audioFile, videoDuration, onTrimChange, isOpen, onClose 
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onTouchCancel={handleTouchEnd}
             />
             <div className="waveform-info">
               <span>Общая длительность трека: {duration.toFixed(1)} сек</span>

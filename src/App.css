@@ -353,22 +353,46 @@
   text-align: right;
 }
 
-/* --- Download link --- */
+/* --- Video actions --- */
+.video-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.btn-preview,
 .btn-download {
-  margin-top: 0.5rem;
-  padding: 0.4rem 0;
+  padding: 0.5rem 1rem;
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--accent);
-  background: none;
-  border: none;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  text-align: left;
-  transition: color var(--transition);
+  transition: all var(--transition);
+  border: none;
+  min-height: 38px;
+}
+
+.btn-preview {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.btn-preview:hover {
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-download {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px var(--accent-glow);
 }
 
 .btn-download:hover {
-  color: #c4b5fd;
+  box-shadow: 0 4px 12px var(--accent-glow);
+  transform: translateY(-1px);
 }
 
 /* --- Footer --- */
@@ -430,3 +454,20 @@
 .video-list .video-card:nth-child(4) { animation-delay: 0.08s; }
 .video-list .video-card:nth-child(5) { animation-delay: 0.1s; }
 .video-list .video-card:nth-child(n+6) { animation-delay: 0.12s; }
+
+/* --- Адаптивность --- */
+@media (max-width: 480px) {
+  .video-actions {
+    width: 100%;
+  }
+  
+  .btn-preview,
+  .btn-download {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .waveform-info {
+    font-size: 0.8rem;
+  }
+}

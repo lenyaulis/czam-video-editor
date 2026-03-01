@@ -82,6 +82,10 @@
   cursor: default;
   background: #1a1a1a;
   user-select: none;
+  touch-action: none; /* Предотвращаем скролл при перетаскивании */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .waveform-canvas:hover {
@@ -384,5 +388,10 @@
   
   .audio-trimmer-actions {
     flex-direction: column;
+  }
+  
+  .position-slider {
+    width: 100%;
+    max-width: 300px;
   }
 }
